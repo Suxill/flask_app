@@ -9,10 +9,11 @@ pipeline {
 
     stages {
         stage('Checkout') {
-            steps {
-                git url: "${GIT_REPO}"
-            }
+	   steps {
+               git branch: 'main', url: "${GIT_REPO}"
+	   }
         }
+
 
         stage('Setup Python') {
             steps {
