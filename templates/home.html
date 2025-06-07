@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html>
+<head><title>Shop Home</title>
+<link rel="stylesheet" href="static/styles.css">
+</head>
+<body>
+  <h1>Products</h1>
+  <ul>
+    {% for id, product in products.items() %}
+      <li>
+        <a href="{{ url_for('product_detail', product_id=id) }}">{{ product.name }}</a> - ${{ product.price }}
+        <a href="{{ url_for('add_to_cart', product_id=id) }}">Add to cart</a>
+      </li>
+    {% endfor %}
+  </ul>
+  <a href="{{ url_for('cart') }}">Go to Cart</a>
+</body>
+</html>
