@@ -2,79 +2,26 @@ pipeline {
     agent any
 
     environment {
-        DOCKER_IMAGE = 'yourdockerhubusername/flask-app:latest'  // Change to your Docker Hub repo
-        DOCKER_CREDENTIALS_ID = 'dockerhub-credentials'          // Jenkins Docker Hub credentials ID
-        GIT_REPO = 'https://github.com/Suxill/flask_app.git'     // Your GitHub repo
+        IMAGE_NAME = "flask-app-image"
+        CONTAINER_NAME = "flask_app_container"
     }
 
     stages {
-        stage('Checkout') {
-	   steps {
-               git branch: 'main', url: "${GIT_REPO}"
-	   }
-        }
-
-
-        stage('Setup Python') {
-            steps {
-                // Install virtualenv if not installed, then create and activate
-                sh '''
-                python3 -m venv venv
-                . venv/bin/activate
-                pip install --upgrade pip
-                pip install -r requirements.txt
-                '''
-            }
-        }
-
-        stage('Test') {
-            steps {
-                sh '''
-                . venv/bin/activate
-                pytest tests/  # Assuming your tests are in tests/ folder
-                '''
-            }
-        }
-
         stage('Build Docker Image') {
             steps {
-                sh 'docker build -t ${DOCKER_IMAGE} .'
-            }
-        }
-
-        stage('Push Docker Image') {
-            steps {
                 script {
-                    docker.withRegistry('https://index.docker.io/v1/', "${DOCKER_CREDENTIALS_ID}") {
-                        sh "docker push ${DOCKER_IMAGE}"
-                    }
+                    docker.build("${IMAGE_NAME}")
                 }
             }
         }
 
-        stage('Deploy / Run Container') {
+        stage('Run Container') {
             steps {
-                // Stop and remove previous container if exists, then run new container
-                sh '''
-                docker stop flask-app || true
-                docker rm flask-app || true
-                docker run -d --name flask-app -p 8081:7000 ${DOCKER_IMAGE}
-                '''
+                script {
+                    sh "docker rm -f ${CONTAINER_NAME} || true"
+                    sh "docker run -d -p 5000:5000 --name ${CONTAINER_NAME} ${IMAGE_NAME}"
+                }
             }
         }
     }
-
-    post {
-        always {
-            echo 'Cleaning up...'
-            sh 'docker system prune -f'
-        }
-        success {
-            echo 'Pipeline succeeded!'
-        }
-        failure {
-            echo 'Pipeline failed!'
-        }
-    }
 }
-
