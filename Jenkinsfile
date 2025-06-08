@@ -4,13 +4,20 @@ pipeline {
     environment {
         IMAGE_NAME = "flask-app-image"
         CONTAINER_NAME = "flask_app_container"
+        APP_PORT = "7000"
     }
 
     stages {
+        stage('Checkout') {
+            steps {
+                checkout scm
+            }
+        }
+
         stage('Build Docker Image') {
             steps {
                 script {
-                    docker.build("${IMAGE_NAME}")
+                    sh "docker build -t ${IMAGE_NAME} ."
                 }
             }
         }
@@ -19,7 +26,25 @@ pipeline {
             steps {
                 script {
                     sh "docker rm -f ${CONTAINER_NAME} || true"
-                    sh "docker run -d -p 5000:7000 --name ${CONTAINER_NAME} ${IMAGE_NAME}"
+                    sh "docker run -d -p ${APP_PORT}:${APP_PORT} --name ${CONTAINER_NAME} ${IMAGE_NAME}"
+                }
+            }
+        }
+
+        stage('Run Tests') {
+            steps {
+                script {
+                    // Run tests inside the running container
+                    // Adjust 'pytest' to your actual test command
+                    sh "docker exec ${CONTAINER_NAME} pytest || docker exec ${CONTAINER_NAME} python3 -m unittest"
+                }
+            }
+        }
+
+        stage('Clean Up') {
+            steps {
+                script {
+                    sh "docker rm -f ${CONTAINER_NAME} || true"
                 }
             }
         }
