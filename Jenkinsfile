@@ -19,7 +19,7 @@ pipeline {
             steps {
                 script {
                     sh "docker rm -f ${CONTAINER_NAME} || true"
-                    sh "docker run -d -p 5000:5000 --name ${CONTAINER_NAME} ${IMAGE_NAME}"
+                    sh "docker run -d -p 5000:7000 --name ${CONTAINER_NAME} ${IMAGE_NAME}"
                 }
             }
         }
